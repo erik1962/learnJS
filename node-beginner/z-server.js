@@ -3,13 +3,21 @@ var url = require("url");
 
 function start(route, handle) {
 
-    console.log(handle);
-
     function onRequest(request, response) {
+        let postData = "";
         let pathname = url.parse(request.url).pathname;
         console.log(`request.url: ${request.url} received.`);
         console.log(`parsed pathname: ${pathname} received.`);
-        let content = route(handle, pathname, response);
+
+        request.setEncoding("utf8");
+        request.addListener("data", function(postDataChunk) {
+            postData += postDataChunk;
+            console.log(`Received POST data chunk ${postDataChunk}.`);
+        });
+        
+        request.addListener("end", function() {
+            route(handle, pathname, response, postData);
+        });
     }
         
     http.createServer(onRequest).listen(8888);
